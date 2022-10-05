@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to Create an EC2 instance in a VPC
+   
+Parameters:
+  VpcId:
+    Type: String
+    Description: VPC id
+    Default: vpc-0e4634d967bdec390
+  ImageId:
+    Type: String
+    Description: 'Linux 2 AMI'
+    Default: 'ami-067e6178c7a211324'
+  InstanceType:
+    Type: String
+    Description: T2 Medium
+    Default: t2.medium
+
+Resources:
+  DemoInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds: 
+        - !Ref DemoSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            # System Updates
+            sudo rpm --import https://yum.corretto.aws/corretto.key
+            sudo curl -L -o /etc/yum.repos.d/corretto.repo https://yum.corretto.aws/corretto.repo
+            sudo yum install -y java-17-amazon-corretto-devel.x86_64
+            sudo adduser minecraft
+            java --version
+            sudo su
+            mkdir /opt/minecraft/
+            mkdir /opt/minecraft/server/
+            cd /opt/minecraft/server
+            wget https://piston-data.mojang.com/v1/objects/f69c284232d7c7580bd89a5a4931c3581eae1378/server.jar
+            sudo chown -R minecraft:minecraft /opt/minecraft/
+            sudo su minecraft
+            cd /opt/minecraft/server/
+            java -Xmx1024M -Xms1024M -jar server.jar nogui
+  DemoSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: SG to allow SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '25565'
+          ToPort: '25565'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: EC2-SG
+Outputs:
+  DemoInstanceId:
+    Description: Instance Id 
+    Value: !Ref DemoInstance
