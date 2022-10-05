@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Template to Create an EC2 instance in a VPC
+Description: Template to create an Minecraft Server within a EC2 instance in a VPC
    
 Parameters:
   VpcId:
@@ -16,13 +16,13 @@ Parameters:
     Default: t2.medium
 
 Resources:
-  DemoInstance:
+  MinecraftInstance:
     Type: 'AWS::EC2::Instance'
     Properties: 
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       SecurityGroupIds: 
-        - !Ref DemoSecurityGroup
+        - !Ref Minecraft-SG
       UserData:
         Fn::Base64: !Sub |
             #!/bin/bash -xe
@@ -41,7 +41,7 @@ Resources:
             sudo su minecraft
             cd /opt/minecraft/server/
             java -Xmx1024M -Xms1024M -jar server.jar nogui
-  DemoSecurityGroup:
+  Minecraft-SG:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref VpcId
@@ -59,6 +59,6 @@ Resources:
         - Key: Name
           Value: EC2-SG
 Outputs:
-  DemoInstanceId:
+  MinecraftInstanceId:
     Description: Instance Id 
-    Value: !Ref DemoInstance
+    Value: !Ref MinecraftInstance
